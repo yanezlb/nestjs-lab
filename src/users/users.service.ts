@@ -4,13 +4,21 @@ import { Repository, DeleteResult } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { HttpException } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
     
     constructor(@InjectRepository(User) private usersRepository: Repository<User>) {}
 
-    createUser(user: CreateUserDto){
+    async createUser(user: CreateUserDto) {
+        const userFound = await this.usersRepository.findOne({ where: { username: user.username } });
+
+        if (userFound) {
+            throw new HttpException('User already exists', HttpStatus.CONFLICT);
+        }
+
         const newUser = this.usersRepository.create(user);
         return this.usersRepository.save(newUser);
     }
@@ -19,8 +27,12 @@ export class UsersService {
         return this.usersRepository.find();
     }   
 
-    getUser(id: number): Promise<User | null> {
-        return this.usersRepository.findOne({ where: { id } });
+    async getUser(id: number): Promise<User | null> {
+        const userFound = await this.usersRepository.findOne({ where: { id } });
+        if(!userFound){
+            throw new HttpException("user not found", HttpStatus.NOT_FOUND);
+        }
+        return userFound;
     }
 
     deleteUser(id: number): Promise<DeleteResult> {
