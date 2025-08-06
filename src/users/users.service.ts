@@ -35,7 +35,11 @@ export class UsersService {
         return userFound;
     }
 
-    deleteUser(id: number): Promise<DeleteResult> {
+    async deleteUser(id: number): Promise<DeleteResult> {
+        const result = await this.usersRepository.delete({ id });
+        if(result.affected === 0){
+            throw new HttpException("user not found", HttpStatus.NOT_FOUND);
+        }
         return this.usersRepository.delete(id);
     }
 
