@@ -44,7 +44,18 @@ export class UsersService {
     }
 
     async updateUser(id: number, userData: UpdateUserDto): Promise<User | null> {
-        await this.usersRepository.update({ id }, userData);
-        return this.usersRepository.findOne({ where: { id } });
+        const userFound = await this.usersRepository.findOne({
+            where:{
+                id
+            }
+        })
+
+        if(!userFound){
+            throw new HttpException("user not found", HttpStatus.NOT_FOUND);
+        }
+
+        const updateUser = Object.assign(userFound, userData)
+        
+        return  this.usersRepository.save(updateUser);
     }
 }
